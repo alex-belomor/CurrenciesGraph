@@ -66,12 +66,12 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
                 if (event.y < componentHeight && event.y > componentHeight - getDpInFloat(60f) &&
                     event.x > horizontalMargin && event.x < componentWidth - horizontalMargin
                 ) {
-                    if (event.x < beginSeekX + seekVerticalBordersPaint.strokeWidth / 2 &&
-                        event.x > beginSeekX - seekVerticalBordersPaint.strokeWidth / 2
+                    if (event.x < beginSeekX + seekVerticalBordersPaint.strokeWidth &&
+                        event.x > beginSeekX - seekVerticalBordersPaint.strokeWidth
                     ) {
                         touchExpandSeekLeft = true
-                    } else if (event.x < endSeekX + seekVerticalBordersPaint.strokeWidth / 2 &&
-                        event.x > endSeekX - seekVerticalBordersPaint.strokeWidth / 2
+                    } else if (event.x < endSeekX + seekVerticalBordersPaint.strokeWidth &&
+                        event.x > endSeekX - seekVerticalBordersPaint.strokeWidth
                     ) {
                         touchExpandSeekRight = true
                     } else if (event.x > beginSeekX && event.x < endSeekX) {
