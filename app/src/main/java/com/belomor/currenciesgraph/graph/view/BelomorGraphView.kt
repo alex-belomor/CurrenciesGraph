@@ -35,6 +35,8 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
     var beginTouchX: Float? = 0f
 
     var touchSeek = false
+    var touchExpandSeekLeft = false
+    var touchExpandSeekRight = false
 
     val gridArray = ArrayList<GridData>()
 
@@ -59,10 +61,22 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
         setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 Log.d("SUKABLYAT", "X = ${event.x} , Y = ${event.y}")
+
                 beginTouchX = event.x
                 if (event.y < componentHeight && event.y > componentHeight - getDpInFloat(60f) &&
-                        event.x > horizontalMargin && event.x < componentWidth - horizontalMargin) {
-                    touchSeek = true
+                    event.x > horizontalMargin && event.x < componentWidth - horizontalMargin
+                ) {
+                    if (event.x < beginSeekX + seekVerticalBordersPaint.strokeWidth / 2 &&
+                        event.x > beginSeekX - seekVerticalBordersPaint.strokeWidth / 2
+                    ) {
+                        touchExpandSeekLeft = true
+                    } else if (event.x < endSeekX + seekVerticalBordersPaint.strokeWidth / 2 &&
+                        event.x > endSeekX - seekVerticalBordersPaint.strokeWidth / 2
+                    ) {
+                        touchExpandSeekRight = true
+                    } else if (event.x > beginSeekX && event.x < endSeekX) {
+                        touchSeek = true
+                    }
                 }
             }
 
@@ -70,6 +84,8 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
             if (event.action == MotionEvent.ACTION_UP) {
                 touchSeek = false
+                touchExpandSeekLeft = false
+                touchExpandSeekRight = false
                 beginTouchX = 0f
                 lastTouchX = 0f
             }
@@ -100,24 +116,51 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
     }
 
     private fun drawSeekBar(canvas: Canvas) {
-        if (touchSeek) {
-            val checkBeginSeekX = beginSeekX + (lastTouchX!! - beginTouchX!!)
-            val checkEndSeekX = endSeekX + (lastTouchX!! - beginTouchX!!)
+        val checkBeginSeekX = beginSeekX + (lastTouchX!! - beginTouchX!!)
+        val checkEndSeekX = endSeekX + (lastTouchX!! - beginTouchX!!)
 
-            if (checkBeginSeekX > horizontalMargin && checkEndSeekX < componentWidth - horizontalMargin) {
+        if (touchSeek) {
+
+            if (checkBeginSeekX >= horizontalMargin && checkEndSeekX <= componentWidth - horizontalMargin) {
                 beginSeekX = checkBeginSeekX
                 endSeekX = checkEndSeekX
                 lengthSeek = endSeekX - beginSeekX
                 beginTouchX = lastTouchX
-            } else if (checkBeginSeekX < horizontalMargin) {
+            } else if (checkBeginSeekX <= horizontalMargin) {
                 beginSeekX = horizontalMargin
                 endSeekX = beginSeekX + lengthSeek
                 beginTouchX = lastTouchX
-            } else if (checkEndSeekX > componentWidth - horizontalMargin) {
+            } else if (checkEndSeekX >= componentWidth - horizontalMargin) {
                 endSeekX = componentWidth - horizontalMargin
                 beginSeekX = endSeekX - lengthSeek
                 beginTouchX = lastTouchX
             }
+        } else if (touchExpandSeekLeft) {
+
+            if (checkBeginSeekX >= horizontalMargin) {
+                if (endSeekX - checkBeginSeekX < getDpInFloat(80f)) {
+                    beginSeekX = endSeekX - getDpInFloat(80f)
+                } else if (beginSeekX < horizontalMargin) {
+                    beginSeekX = horizontalMargin
+                } else {
+                    beginSeekX = checkBeginSeekX
+                }
+            }
+
+            beginTouchX = lastTouchX
+        } else if (touchExpandSeekRight) {
+
+            if (checkEndSeekX <= componentWidth - horizontalMargin) {
+                if (checkEndSeekX - beginSeekX < getDpInFloat(80f)) {
+                    endSeekX = beginSeekX + getDpInFloat(80f)
+                } else if (endSeekX > componentWidth - horizontalMargin) {
+                    endSeekX = componentWidth - horizontalMargin
+                } else {
+                    endSeekX = checkEndSeekX
+                }
+            }
+
+            beginTouchX = lastTouchX
         }
 
         //off left seek background
@@ -181,6 +224,6 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
         componentHeight = MeasureSpec.getSize(heightMeasureSpec).toFloat()
 
         beginSeekX = horizontalMargin
-        endSeekX = (componentWidth - horizontalMargin) / 2 //2 is a debug value
+        endSeekX = (componentWidth - horizontalMargin)
     }
 }
