@@ -9,36 +9,39 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.belomor.currenciesgraph.R
+import com.belomor.currenciesgraph.graph.data.Dates
 import com.belomor.currenciesgraph.graph.data.GridData
 import com.belomor.currenciesgraph.graph.extensions.getDpInFloat
 
 class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
-    val gridPaint = Paint()
-    val valuesPaint = Paint()
-    val linesPaint = Paint()
+    private var data : ArrayList<Dates>? = null
 
-    var componentWidth: Float = 0f
-    var componentHeight: Float = 0f
+    private val gridPaint = Paint()
+    private val valuesPaint = Paint()
+    private val linesPaint = Paint()
 
-    val horizontalMargin = getDpInFloat(16f)
+    private var componentWidth: Float = 0f
+    private var componentHeight: Float = 0f
 
-    val seekVerticalBordersPaint = Paint()
-    val seekHorizontalBordersPaint = Paint()
-    val seekOffPaint = Paint()
+    private val horizontalMargin = getDpInFloat(16f)
 
-    var beginSeekX = 0f
-    var endSeekX = 0f
-    var lengthSeek = 0f
+    private val seekVerticalBordersPaint = Paint()
+    private val seekHorizontalBordersPaint = Paint()
+    private val seekOffPaint = Paint()
 
-    var lastTouchX: Float? = 0f
-    var beginTouchX: Float? = 0f
+    private var beginSeekX = 0f
+    private var endSeekX = 0f
+    private var lengthSeek = 0f
 
-    var touchSeek = false
-    var touchExpandSeekLeft = false
-    var touchExpandSeekRight = false
+    private var lastTouchX: Float? = 0f
+    private var beginTouchX: Float? = 0f
 
-    val gridArray = ArrayList<GridData>()
+    private var touchSeek = false
+    private var touchExpandSeekLeft = false
+    private var touchExpandSeekRight = false
+
+    private val gridArray = ArrayList<GridData>()
 
     init {
         gridPaint.isAntiAlias = true
@@ -113,6 +116,11 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
             drawSeekBar(it)
         }
+    }
+
+    fun setData(data : ArrayList<Dates>) {
+        this.data = data
+        invalidate()
     }
 
     private fun drawSeekBar(canvas: Canvas) {
