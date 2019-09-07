@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
 
         listenToChartData()
 
-        viewModel.getHistoryCurrencies("2019-01-01..2019-09-04")
+        viewModel.getHistoryCurrencies("2019-08-03..2019-09-04")
     }
 
     private fun listenToChartData() {
