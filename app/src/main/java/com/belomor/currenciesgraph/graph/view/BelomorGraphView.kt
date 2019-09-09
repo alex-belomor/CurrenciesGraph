@@ -1,10 +1,12 @@
 package com.belomor.currenciesgraph.graph.view
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Path
 import android.util.ArrayMap
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -45,10 +47,7 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
     private var touchExpandSeekRight = false
 
     private val seekMatrix = Matrix()
-
-    private val arrayPath = ArrayMap<String, Path>()
-
-    private val gridArray = ArrayList<GridData>()
+    private val chartMatrix = Matrix()
 
     init {
 
@@ -69,7 +68,7 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
         seekLinesPaint.strokeCap = Paint.Cap.ROUND
         seekLinesPaint.style = Paint.Style.STROKE
 
-        linesPaint.strokeWidth = getDpInFloat(3f)
+        linesPaint.strokeWidth = getDpInFloat(2f)
         linesPaint.strokeJoin = Paint.Join.ROUND
         linesPaint.strokeCap = Paint.Cap.ROUND
         linesPaint.style = Paint.Style.STROKE
@@ -114,22 +113,26 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
     override fun onDraw(canvas: Canvas?) {
         canvas?.let {
-            for (i in 0..5) {
-                it.drawLine(
-                    horizontalMargin,
-                    ((componentHeight - HEIGHT_SEEK_BAR - HEIGHT_SEEK_BAR) / 5 * i).toFloat() + getDpInFloat(
-                        30f
-                    ),
-                    componentWidth - horizontalMargin,
-                    ((componentHeight - HEIGHT_SEEK_BAR - HEIGHT_SEEK_BAR) / 5 * i).toFloat() + getDpInFloat(
-                        30f
-                    ),
-                    gridPaint
-                )
-            }
-
+            drawHorizontalLines(it)
+            drawChart(it)
             drawSeekChart(it)
             drawSeekBar(it)
+        }
+    }
+
+    private fun drawHorizontalLines(canvas: Canvas) {
+        for (i in 0..5) {
+            canvas.drawLine(
+                horizontalMargin,
+                ((componentHeight - HEIGHT_SEEK_BAR * 2) / 5 * i).toFloat() + getDpInFloat(
+                    30f
+                ),
+                componentWidth - horizontalMargin,
+                ((componentHeight - HEIGHT_SEEK_BAR * 2) / 5 * i).toFloat() + getDpInFloat(
+                    30f
+                ),
+                gridPaint
+            )
         }
     }
 
@@ -140,7 +143,34 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
     private fun drawChart(canvas: Canvas) {
         data?.let {
+            val oneDateWidth = (componentWidth - horizontalMargin * 2) / (it[0].details.size - 1)
+            val allMinValue = it.getAllMinValue()
+            val allMaxValue = it.getAllMaxValue()
+            val percentOfHeight =
+                (((componentHeight - HEIGHT_SEEK_BAR * 2)).toFloat() + getDpInFloat(30f)) / 100f
+            val heightOfValuePercent = (allMaxValue - allMinValue) / 100f
 
+            for (data in it) {
+                if (data.visible) {
+                    linesPaint.color = data.color
+                    val path = Path()
+                    var latestXDraw = horizontalMargin
+                    path.moveTo(
+                        latestXDraw,
+                        ((data.details[0].value - allMinValue) / heightOfValuePercent * percentOfHeight)
+                    )
+                    for (i in 0 until data.details.size) {
+                        path.lineTo(
+                            latestXDraw,
+                            ((data.details[i].value - allMinValue) / heightOfValuePercent * percentOfHeight)
+                        )
+                        latestXDraw += oneDateWidth
+                    }
+
+                    path.transform(chartMatrix)
+                    canvas.drawPath(path, linesPaint)
+                }
+            }
         }
     }
 
@@ -157,9 +187,15 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
                     seekLinesPaint.color = data.color
                     val path = Path()
                     var latestXDraw = horizontalMargin
-                    path.moveTo(latestXDraw,  ((data.details[0].value - allMinValue) / heightOfValuePercent * percentOfHeight))
+                    path.moveTo(
+                        latestXDraw,
+                        ((data.details[0].value - allMinValue) / heightOfValuePercent * percentOfHeight)
+                    )
                     for (i in 0 until data.details.size) {
-                        path.lineTo(latestXDraw, ((data.details[i].value - allMinValue) / heightOfValuePercent * percentOfHeight))
+                        path.lineTo(
+                            latestXDraw,
+                            ((data.details[i].value - allMinValue) / heightOfValuePercent * percentOfHeight)
+                        )
                         latestXDraw += oneDateWidth
                     }
 
@@ -281,6 +317,11 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
         beginSeekX = horizontalMargin
         endSeekX = (componentWidth - horizontalMargin)
 
-        seekMatrix.setRotate(180f, componentWidth / 2f, componentHeight / 2f )
+        seekMatrix.setRotate(180f, componentWidth / 2f, componentHeight / 2f)
+        chartMatrix.setRotate(
+            180f,
+            componentWidth / 2f,
+            ((componentHeight - HEIGHT_SEEK_BAR * 2) + getDpInFloat(30f)) / 2f
+        )
     }
 }
