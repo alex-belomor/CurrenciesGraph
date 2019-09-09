@@ -19,8 +19,9 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
     private var data: ChartValuesArray? = null
 
-    private val gridPaint = Paint()
-    private val valuesPaint = Paint()
+    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val valuesPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val seekLinesPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val linesPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private var componentWidth: Float = 0f
@@ -51,11 +52,6 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
     init {
 
-        gridPaint.isAntiAlias = true
-        valuesPaint.isAntiAlias = true
-        linesPaint.isAntiAlias = true
-        seekOffPaint.isAntiAlias = true
-
         seekOffPaint.color = ContextCompat.getColor(getContext(), R.color.trans_blue2)
         seekVerticalBordersPaint.color = ContextCompat.getColor(getContext(), R.color.trans_blue)
         seekHorizontalBordersPaint.color = ContextCompat.getColor(getContext(), R.color.trans_blue)
@@ -65,19 +61,23 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
         gridPaint.color = ContextCompat.getColor(getContext(), R.color.gray)
         valuesPaint.color = ContextCompat.getColor(getContext(), R.color.gray)
+        seekLinesPaint.color = ContextCompat.getColor(getContext(), R.color.colorPrimaryDark)
         linesPaint.color = ContextCompat.getColor(getContext(), R.color.colorPrimaryDark)
 
-        linesPaint.strokeWidth = getDpInFloat(1f)
+        seekLinesPaint.strokeWidth = getDpInFloat(1f)
+        seekLinesPaint.strokeJoin = Paint.Join.ROUND
+        seekLinesPaint.strokeCap = Paint.Cap.ROUND
+        seekLinesPaint.style = Paint.Style.STROKE
+
+        linesPaint.strokeWidth = getDpInFloat(3f)
         linesPaint.strokeJoin = Paint.Join.ROUND
         linesPaint.strokeCap = Paint.Cap.ROUND
-        linesPaint.isAntiAlias = true
         linesPaint.style = Paint.Style.STROKE
 
         gridPaint.strokeWidth = getDpInFloat(1f)
 
         setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                Log.d("SUKABLYAT", "X = ${event.x} , Y = ${event.y}")
 
                 beginTouchX = event.x
                 if (event.y < componentHeight && event.y > componentHeight - getDpInFloat(60f) &&
@@ -136,8 +136,6 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
     fun setData(data: ChartValuesArray) {
         this.data = data
         invalidate()
-
-        Log.d("SUKABLYATNAHUY", "${data.getAllMaxValue()}")
     }
 
     private fun drawChart(canvas: Canvas) {
@@ -156,7 +154,7 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
 
             for (data in it) {
                 if (data.visible) {
-                    linesPaint.color = data.color
+                    seekLinesPaint.color = data.color
                     val path = Path()
                     var latestXDraw = horizontalMargin
                     path.moveTo(latestXDraw,  ((data.details[0].value - allMinValue) / heightOfValuePercent * percentOfHeight))
@@ -166,7 +164,7 @@ class BelomorGraphView(context: Context?, attrs: AttributeSet?) : View(context, 
                     }
 
                     path.transform(seekMatrix)
-                    canvas.drawPath(path, linesPaint)
+                    canvas.drawPath(path, seekLinesPaint)
                 }
             }
         }
